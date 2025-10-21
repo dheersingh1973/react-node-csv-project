@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "concurrently": "^9.2.1"
+  },
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "concurrently \"npm run start --prefix frontend\" \"npm run start --prefix backend\""
+  },
+  "keywords": [],
+  "author": ""
+}

@@ -1,0 +1,69 @@
+.thank-you-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  max-width: 700px;
+  margin: 50px auto;
+  background-color: #f9f9f9;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  font-family: 'Arial', sans-serif;
+  color: #333;
+  text-align: center;
+}
+
+.thank-you-container h2 {
+  color: #28a745;
+  font-size: 2.5em;
+  margin-bottom: 20px;
+}
+
+.thank-you-container p {
+  font-size: 1.2em;
+  margin-bottom: 10px;
+}
+
+.thank-you-container p strong {
+  color: #007bff;
+}
+
+.thank-you-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Uniform buttons in a grid */
+  gap: 15px;
+  margin-top: 30px;
+  width: 100%;
+}
+
+.action-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1em;
+  transition: background-color 0.3s ease;
+  /* Removed min-width to allow grid to manage size */
+}
+
+.action-button:hover {
+  background-color: #0056b3;
+}
+
+.action-button:active {
+  background-color: #004085;
+  transform: translateY(1px);
+}
+
+.open-cash-register-button {
+  width: 100%; /* Make it a long button */
+  margin-top: 20px; /* Space it from other buttons */
+  background-color: #28a745; /* Different color for distinction */
+}
+
+.open-cash-register-button:hover {
+  background-color: #218838;
+}

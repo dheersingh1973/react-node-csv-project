@@ -1,0 +1,84 @@
+.category-organization-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+h2 {
+  color: #333;
+  margin-bottom: 30px;
+}
+
+.category-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  margin: 0 auto; /* Center the grid */
+  flex: 1;
+  align-content: center;
+}
+
+.category-button {
+  background: white;
+  border: none;
+  border-radius: 20px;
+  padding: 2rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+  position: relative;
+  overflow: hidden;
+}
+
+.category-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--button-color, #667eea); /* Use a default color if not provided */
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.category-button:hover::before {
+  transform: scaleX(1);
+}
+
+.category-button:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+.category-button:active {
+  transform: translateY(-4px);
+}
+
+.category-image {
+  width: 100px; /* Adjust image size as needed */
+  height: 100px; /* Adjust image size as needed */
+  object-fit: contain; /* Ensures the image fits without cropping */
+  margin-bottom: 1rem;
+  transition: transform 0.3s ease;
+}
+
+.category-button:hover .category-image {
+  transform: scale(1.1);
+}
+
+.category-name {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #333;
+  text-align: center;
+}
+
+/* Responsive adjustments */

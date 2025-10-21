@@ -1,0 +1,100 @@
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #333;
+  color: white;
+  padding: 10px 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.left-section,
+.right-section {
+  display: flex;
+  align-items: center;
+}
+
+.hamburger-menu {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5em;
+  cursor: pointer;
+  margin-right: 15px;
+  z-index: 1001; /* Ensure it's above the menu */
+}
+
+.nav-menu {
+  position: fixed;
+  top: 0;
+  left: -250px; /* Hidden by default */
+  width: 250px;
+  height: 100%;
+  background-color: #222;
+  padding-top: 60px; /* Space for the header */
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
+  transition: left 0.3s ease-in-out;
+  z-index: 1000;
+}
+
+.nav-menu.open {
+  left: 0; /* Slide in */
+}
+
+.nav-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.nav-menu li {
+  border-bottom: 1px solid #444;
+}
+
+.nav-menu li:last-child {
+  border-bottom: none;
+}
+
+.nav-menu a {
+  display: block;
+  padding: 15px 20px;
+  color: white;
+  text-decoration: none;
+  font-size: 1.1em;
+  transition: background-color 0.2s;
+}
+
+.nav-menu a:hover {
+  background-color: #555;
+}
+
+.app-name {
+  font-size: 1.3em;
+  font-weight: bold;
+}
+
+.user-name {
+  margin-right: 10px;
+  font-size: 1.1em;
+}
+
+.user-icon {
+  font-size: 1.5em;
+  /* You can replace this with an actual icon font or image */
+}
+
+.connectivity-indicator {
+  margin-left: 20px;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-weight: bold;
+  color: white;
+}
+
+.connectivity-indicator.connected {
+  background-color: green;
+}
+
+.connectivity-indicator.disconnected {
+  background-color: red;
+}
