@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { generateReceipt } from '../../utils/receiptUtils';
 import './css/OrderReport.css';
 
 const OrderReport = () => {
@@ -8,6 +9,8 @@ const OrderReport = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
+  const fromPrintReceipts = location.state?.fromPrintReceipts || false;
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -36,9 +39,13 @@ const OrderReport = () => {
     navigate(`/order-details/${orderId}`);
   };
 
+  const handleGenerateReceipt = (orderId) => {
+    generateReceipt(orderId);
+  };
+
   return (
     <div className="order-report-container">
-      <h1>Order Report</h1>
+      <h1>{fromPrintReceipts ? 'Print Receipts' : 'Order Report'}</h1>
       {orders.length === 0 ? (
         <p>No orders found.</p>
       ) : (
@@ -67,6 +74,12 @@ const OrderReport = () => {
                     onClick={() => handleDetailsClick(order.order_id)}
                   >
                     Details
+                  </button>
+                  <button
+                    className="receipt-button"
+                    onClick={() => handleGenerateReceipt(order.order_id)}
+                  >
+                    Generate Receipt
                   </button>
                 </td>
               </tr>

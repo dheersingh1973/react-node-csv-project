@@ -42,8 +42,25 @@
   cursor: pointer;
   font-size: 0.9em;
   transition: background-color 0.2s;
+  margin-left: 10px; /* Space between buttons */
 }
 
 .detail-button:hover {
   background-color: #0056b3;
+}
+
+.receipt-button {
+  background-color: #28a745; /* Green color for generate receipt */
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: background-color 0.2s;
+  margin-left: 10px; /* Space between buttons */
+}
+
+.receipt-button:hover {
+  background-color: #218838;
 }

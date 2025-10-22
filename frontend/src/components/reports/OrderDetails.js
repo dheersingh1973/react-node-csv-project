@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import axios from 'axios'; // Import axios
+import axios from 'axios';
 import '../reports/css/OrderDetails.css'; // Import the CSS file
 
 const OrderDetails = () => {
@@ -28,25 +28,6 @@ const OrderDetails = () => {
     fetchOrderData();
   }, [orderId]);
 
-  const handleGenerateReceipt = async () => {
-    try {
-      const response = await axios.get(`http://localhost:5000/api/generate-receipt/${orderId}`, {
-        responseType: 'blob' // Important for handling file downloads
-      });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `receipt_${orderId}.pdf`); // Set the desired filename
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('Error generating receipt:', err);
-      alert('Failed to generate receipt.');
-    }
-  };
-
   if (loading) {
     return <div className="order-details-container">Loading order details...</div>;
   }
@@ -62,9 +43,6 @@ const OrderDetails = () => {
   return (
     <div className="order-details-container">
       <h2>Order Details for Order ID: {orderId}</h2>
-      <div className="receipt-button-container">
-        <button onClick={handleGenerateReceipt} className="generate-receipt-button prominent">Generate Receipt</button>
-      </div>
 
       <div className="order-details-grid">
         <div className="detail-item">

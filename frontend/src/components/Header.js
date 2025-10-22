@@ -5,40 +5,84 @@ import './css/Header.css';
 const Header = ({ menuItems }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isConnected, setIsConnected] = useState(navigator.onLine);
+  const [isGlobalDbConnected, setIsGlobalDbConnected] = useState(false);
 
   useEffect(() => {
     const pingInternet = async () => {
+      let internetStatus = false;
       try {
         const timestamp = new Date().getTime();
         await fetch(`https://www.google.com/favicon.ico?_=${timestamp}`, { mode: 'no-cors' });
-        setIsConnected(true);
-        // Call backend syncUsers if connected
+        internetStatus = true;
+      } catch (error) {
+        internetStatus = false;
+      }
+      setIsConnected(internetStatus);
+
+      if (internetStatus) {
         try {
-          await fetch('http://localhost:5000/api/sync-data', {
+          const dbStatusResponse = await fetch('http://localhost:5000/api/db-status');
+          const dbStatus = await dbStatusResponse.json();
+          setIsGlobalDbConnected(dbStatus.globalConnected);
+
+          if (!dbStatus.globalConnected) {
+            console.log("Internet connected but global DB not. Attempting reconnection...");
+            const reconnectResponse = await fetch('http://localhost:5000/api/reconnect-global-db', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            });
+            const reconnectResult = await reconnectResponse.json();
+            setIsGlobalDbConnected(reconnectResult.connected);
+            if (reconnectResult.connected) {
+              console.log("Global DB reconnected successfully.");
+            } else {
+              console.warn("Failed to reconnect global DB.");
+            }
+          }
+        } catch (dbError) {
+          console.error('Error checking/reconnecting global DB:', dbError);
+          setIsGlobalDbConnected(false);
+          // Call the new API to signal global DB connection failure to the backend
+          fetch('http://localhost:5000/api/global-db-failed', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
-          });
-          console.log('User sync initiated from frontend.');
-        } catch (syncError) {
-          console.error('Error initiating user sync:', syncError);
+          }).catch(apiError => console.error('Error reporting global DB failure to backend:', apiError));
         }
-      } catch (error) {
-        setIsConnected(false);
+      } else {
+        setIsGlobalDbConnected(false);
+        // Call the new API to signal global DB connection failure to the backend
+        fetch('http://localhost:5000/api/global-db-failed', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }).catch(apiError => console.error('Error reporting global DB failure to backend:', apiError));
       }
     };
 
     pingInternet(); // Initial check
-    const intervalId = setInterval(pingInternet, 60000); // Ping every minute
+    const intervalId = setInterval(pingInternet, 30000); // Ping every 30 seconds
 
-    window.addEventListener('online', () => setIsConnected(true));
-    window.addEventListener('offline', () => setIsConnected(false));
+    const handleOnline = () => {
+      setIsConnected(true);
+      pingInternet(); // Immediately check DB status on regaining internet
+    };
+    const handleOffline = () => {
+      setIsConnected(false);
+      setIsGlobalDbConnected(false);
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
 
     return () => {
       clearInterval(intervalId);
-      window.removeEventListener('online', () => setIsConnected(true));
-      window.removeEventListener('offline', () => setIsConnected(false));
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
     };
   }, []);
 
@@ -71,7 +115,10 @@ const Header = ({ menuItems }) => {
           👤
         </div>
         <div className={`connectivity-indicator ${isConnected ? 'connected' : 'disconnected'}`}>
-          {isConnected ? 'Connected' : 'Disconnected'}
+          {isConnected ? 'Internet Connected' : 'Internet Disconnected'}
+        </div>
+        <div className={`connectivity-indicator ${isGlobalDbConnected ? 'connected' : 'disconnected'}`}>
+          {isGlobalDbConnected ? 'Global DB Connected' : 'Global DB Disconnected'}
         </div>
       </div>
     </header>

@@ -20,7 +20,7 @@ const Register = () => {
           <div className="feature-list">
             <button className="action-button" onClick={() => navigate('/POScart')}>💰 Process Sales transactions</button>
             <button className="action-button" onClick={() => navigate('/order-report')}>📊 Order Report</button>
-            <div className="feature-item">• Print receipts</div>
+            <button className="action-button" onClick={() => navigate('/order-report', { state: { fromPrintReceipts: true } })}>🖨️ Print receipts</button>
             <div className="feature-item">• Manage returns and refunds</div>
           </div>
         </div>

@@ -1,26 +1,82 @@
 const express = require('express');
 const cors = require('cors');
-const { localConnection, globalConnection, connectDB } = require('./db');
+require('dotenv').config(); // Load environment variables from .env file
+const { connectDB, getConnections, localConnectionEstablished, globalConnectionEstablished, reconnectGlobalDB, connectGlobalDBFailed } = require('./db');
 
 const STORE_ID = 1;
 const STORE_NAME = 'TEST_STORE_1';
 const POS_ID = 1;
 
+let localConnection;
+let globalConnection;
+
 const app = express();
 const PORT = process.env.PORT || 5000;
+// Periodically check global connection and attempt sync
+const SYNC_INTERVAL = 60 * 1000; // 1 minute
 
 app.use(cors());
 app.use(express.json());
 
-/*(async () => {
+
+const initializeConnectionsAndSync = async () => {
   try {
     await connectDB();
-    syncData();
+    ({ localConnection, globalConnection } = getConnections());
+
+    if (localConnectionEstablished() && globalConnectionEstablished()) {
+      console.log("Both databases connected. Initiating syncData.");
+      console.log(`Initial Check: Local: ${localConnectionEstablished()}, Global: ${globalConnectionEstablished()}`);
+      syncData();
+    } else if (localConnectionEstablished()) {
+      console.log("Local database connected. Operating in local-only mode. Global database not connected.");
+    } else {
+      console.error("Failed to connect to local database. Exiting.");
+      process.exit(1);
+    }
   } catch (err) {
-    console.error("Failed to connect to databases:", err);
+    console.error("Error during initial connection setup:", err);
     process.exit(1);
   }
-})();*/
+};
+
+initializeConnectionsAndSync();
+
+setInterval(async () => {
+  // Re-fetch connection status and objects in case db.js reconnected internally
+  ({ localConnection, globalConnection } = getConnections());
+
+  if (!localConnectionEstablished()) {
+    console.error("Local database connection lost. Sync cannot proceed.");
+    return;
+  }
+
+  if (!globalConnectionEstablished()) {
+    console.warn("Global database not connected. Attempting to reconnect...");
+    const reconnected = await reconnectGlobalDB();
+    if (reconnected) {
+      console.log("Global database reconnected successfully during periodic check.");
+      ({ localConnection, globalConnection } = getConnections()); // Re-fetch connections after successful reconnection
+    } else {
+      console.warn("Failed to reconnect global database during periodic check.");
+    }
+  }
+
+  if (localConnectionEstablished() && globalConnectionEstablished()) {
+    console.log("Both databases connected. Triggering periodic syncData.");
+    console.log(`Periodic Check: Local: ${localConnectionEstablished()}, Global: ${globalConnectionEstablished()}`);
+    try {
+      await syncData();
+      console.log("Periodic syncData completed successfully.");
+    } catch (error) {
+      console.error("Error during periodic syncData:", error);
+    }
+  } else {
+    console.log("Periodic check: Global database still not connected. Skipping syncData.");
+    console.log(`Periodic Check: Local: ${localConnectionEstablished()}, Global: ${globalConnectionEstablished()}`);
+  }
+}, SYNC_INTERVAL);
+
 
 // Utility for mapping local IDs to global IDs (implement as per your user/product sync logic)
 async function getGlobalUserId(localUserId, localConn) {
@@ -32,6 +88,11 @@ async function getGlobalUserId(localUserId, localConn) {
 
 async function syncData() {
   try {
+    // Check if globalConnection is still valid before executing queries
+    if (!globalConnectionEstablished()) {
+      console.warn("Global database not connected during syncData. Skipping synchronization.");
+      throw new Error("Global DB not connected.");
+    }
         // 1. Fetch all unsynced users
         const [users] = await localConnection.execute(
           'SELECT user_id,mobile_number,email,name,address,created_at,TotalPoints,master_user_id,last_sync_date,is_sync,store_id FROM UserAccounts WHERE is_sync = 0 and master_user_id IS NULL'
@@ -64,6 +125,7 @@ async function syncData() {
                 user.user_id
               ]
             );
+            console.log('User sync complete.');
           } 
           else 
           {
@@ -94,10 +156,10 @@ async function syncData() {
               [masterUserId, user.user_id]
             );
           }
+          console.log('User sync complete.');
         }
 
-        console.log('User sync complete.');
-
+        
         // Select products to sync (is_sync = 0)
         const [products] = await localConnection.query(
         `SELECT product, category, sub_category, brand, sale_price, market_price, type, rating , description, category_id,  quantity, sku_id, store_id
@@ -152,6 +214,7 @@ async function syncData() {
                     ]
                 );
                 masterProductId = insertResult.insertId;
+                
             }
 
             // Update local is_sync and master_product_id
@@ -161,9 +224,11 @@ async function syncData() {
                 WHERE sku_id = ? AND store_id = ?`,
                 [masterProductId, product.sku_id, product.store_id]
             );
+
+            console.log('Product sync completed.');
         }
 
-        console.log('Product sync completed.');
+        
 
         // 1. Get all unsynced orders from local DB
         const [orders] = await localConnection.query('SELECT * FROM Orders WHERE is_sync = 0');
@@ -247,22 +312,41 @@ async function syncData() {
           console.log('Full update of order id: ',order.order_id,'complete.');
         }
 
-        console.log('Order sync completed.');
       
   } catch (err) {
     console.error('Sync error:', err);
+    if (err.code === 'PROTOCOL_CONNECTION_LOST' || err.code === 'ECONNRESET' || err.code === 'ETIMEDOUT' || err.code === 'EADDRNOTAVAIL' || err.code === 'ENOTFOUND') {
+        await connectGlobalDBFailed();
+    }
+    throw err; // Re-throw the error to be caught by the caller
   } 
 }
 
-app.post('/api/sync-data', async (req, res) => {
-  try {
-        await connectDB();
-        await syncData();
-        res.status(200).json({ message: 'Data synchronization initiated successfully.' });
-  } catch (error) {
-        console.error('Error initiating data synchronization:', error);
-        res.status(500).json({ error: 'Failed to initiate data synchronization.' });
+
+app.post('/api/global-db-failed', async (req, res) => {
+  console.log("Frontend reported global DB connection failed.");
+  await connectGlobalDBFailed();
+  res.status(200).json({ message: 'Global database connection marked as failed.' });
+});
+
+app.post('/api/reconnect-global-db', async (req, res) => {
+  console.log("Frontend requested global DB reconnection.");
+  const reconnected = await reconnectGlobalDB();
+  // Re-fetch connections after reconnection attempt, regardless of success or failure
+  ({ localConnection, globalConnection } = getConnections());
+
+  if (reconnected) {
+    res.status(200).json({ message: 'Global database reconnected successfully.', connected: true });
+  } else {
+    res.status(200).json({ message: 'Failed to reconnect global database.', connected: false });
   }
+});
+
+app.get('/api/db-status', (req, res) => {
+  res.status(200).json({
+    localConnected: localConnectionEstablished(),
+    globalConnected: globalConnectionEstablished(),
+  });
 });
 
 app.get('/api/products', async (req, res) => {
@@ -746,17 +830,11 @@ app.get('/api/generate-receipt/:orderId', async (req, res) => {
   const filepath = path.join(invoicesDir, filename);
 
   try {
-    // Check if the invoice already exists
-    if (fs.existsSync(filepath)) {
-      console.log(`Serving existing invoice: ${filename}`);
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `inline; filename=${filename}`); // Use 'inline' to open in browser
-      const readStream = fs.createReadStream(filepath);
-      readStream.pipe(res);
-      return;
+    // Ensure the invoices directory exists before writing the file
+    if (!fs.existsSync(invoicesDir)) {
+      fs.mkdirSync(invoicesDir, { recursive: true });
     }
 
-    // If not, proceed to generate a new one
     // Fetch order details
     const [orderDetails] = await localConnection.query(
       `SELECT
@@ -839,7 +917,7 @@ app.get('/api/generate-receipt/:orderId', async (req, res) => {
 
       amountSavedAgainstMRP += (item.market_price - item.sale_price) * parseFloat(item.product_quantity);
 
-      const gstGroup = `${gstPercentage}% items`;
+      const gstGroup = `${gstPercentage}% GST items`;
       if (!groupedItems[gstGroup]) {
         groupedItems[gstGroup] = [];
       }
@@ -1048,6 +1126,11 @@ app.get('/api/generate-receipt/:orderId', async (req, res) => {
     currentY += 30;
 
     doc.end();
+
+    await new Promise((resolve, reject) => {
+      doc.on('end', resolve);
+      doc.on('error', reject);
+    });
 
     // Send the generated PDF as a response
     res.setHeader('Content-Type', 'application/pdf');
