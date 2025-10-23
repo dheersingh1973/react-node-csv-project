@@ -1,4 +1,5 @@
 const mysql2 = require('mysql2');
+require('dotenv').config();
 
 let localConnection;
 let globalConnection;
@@ -8,11 +9,11 @@ let isGlobalConnectionInProgress = false;
 
 const createLocalConnection = () => {
   localConnection = mysql2.createConnection({
-    host: 'localhost',
-    port: 3307,
-    user: 'root',
-    password: 'Tink@2Mink',
-    database: 'pos_poc'
+    host: process.env.DB_HOST_LOCAL,
+    port: process.env.DB_PORT_LOCAL,
+    user: process.env.DB_USER_LOCAL,
+    password: process.env.DB_PASSWORD_LOCAL,
+    database: process.env.DB_NAME_LOCAL
   });
 
   localConnection.on('error', (err) => {
@@ -29,11 +30,11 @@ const createLocalConnection = () => {
 
 const createGlobalConnection = () => {
   globalConnection = mysql2.createConnection({
-    host: 'demo-poc.c1a2si8mm232.ap-south-1.rds.amazonaws.com', // Fallback to localhost if not set
-    port: 3308,
-    user: 'admin',
-    password: 'Tink&7Mink',
-    database: 'pos_poc_master'
+    host: process.env.DB_HOST_GLOBAL, // Fallback to localhost if not set
+    port: process.env.DB_PORT_GLOBAL,
+    user: process.env.DB_USER_GLOBAL,
+    password: process.env.DB_PASSWORD_GLOBAL,
+    database: process.env.DB_NAME_GLOBAL
   });
 
   globalConnection.on('error', (err) => {

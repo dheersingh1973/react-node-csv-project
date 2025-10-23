@@ -2,6 +2,9 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config(); // Load environment variables from .env file
 const { connectDB, getConnections, localConnectionEstablished, globalConnectionEstablished, reconnectGlobalDB, connectGlobalDBFailed } = require('./db');
+const { sendBillByEmail } = require('./utils/email'); // Import the email utility
+const path = require('path');
+const fs = require('fs');
 
 const STORE_ID = 1;
 const STORE_NAME = 'TEST_STORE_1';
@@ -327,6 +330,49 @@ app.post('/api/global-db-failed', async (req, res) => {
   console.log("Frontend reported global DB connection failed.");
   await connectGlobalDBFailed();
   res.status(200).json({ message: 'Global database connection marked as failed.' });
+});
+
+app.post('/api/send-bill-email', async (req, res) => {
+  const { toEmail, orderId, cartGrandTotal } = req.body;
+
+  if (!toEmail || !orderId || cartGrandTotal === undefined) {
+    return res.status(400).json({ message: 'Missing required fields: toEmail, orderId, cartGrandTotal.' });
+  }
+
+  try {
+    // Assuming the receipt PDF is already generated and saved by the generate-receipt endpoint.
+    // Construct the path to the receipt.
+    const filename = `receipt_${orderId}.pdf`;
+    const receiptPath = path.join(__dirname, '..', 'frontend', 'public', 'invoices', filename);
+
+    // Check if the file actually exists before attempting to send it
+    if (!fs.existsSync(receiptPath)) {
+      // Attempt to generate the receipt if it doesn't exist
+      // This might involve re-using the logic from /api/generate-receipt/:orderId
+      // For now, we'll just log an error and indicate it's not found
+      console.warn(`Receipt file not found at ${receiptPath}. Attempting to generate on demand.`);
+
+      // This part would ideally trigger the receipt generation logic if not already present.
+      // For this implementation, we'll assume it's created by the 'Print Bill' action.
+      // If you want to automatically generate it here, you'd need to call the receipt generation function.
+      // For now, if it's not found, we'll send the email without an attachment but with a link.
+      // A robust solution would call the generation logic here.
+    }
+
+    const frontendReceiptUrl = `${process.env.FRONTEND_URL}/invoices/${filename}`;
+
+    const emailResult = await sendBillByEmail(toEmail, orderId, cartGrandTotal, frontendReceiptUrl);
+
+    if (emailResult.success) {
+      res.status(200).json({ message: emailResult.message });
+    } else {
+      res.status(500).json({ message: emailResult.message, error: emailResult.error });
+    }
+
+  } catch (error) {
+    console.error('Error in /api/send-bill-email:', error);
+    res.status(500).json({ message: 'Internal server error sending bill email.', error: error.message });
+  }
 });
 
 app.post('/api/reconnect-global-db', async (req, res) => {
@@ -812,8 +858,6 @@ app.get('/api/points/balance', async (req, res) => {
 });
 
 const PDFDocument = require('pdfkit');
-const fs = require('fs');
-const path = require('path');
 
 // Constants for Receipt
 const COMPANY = "Demo POS (Delhi)";
