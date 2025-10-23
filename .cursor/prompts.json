@@ -1,0 +1,11 @@
+{
+    "prompts": [
+      {
+        "name": "Create Branch",
+        "tool": "create_branch",
+        "description": "Creates a new branch in the selected GitHub repository.",
+        "template": "Create a new branch called {{branch_name}} from {{base_branch}} in {{repo_name}}"
+      }
+    ]
+  }
+  
