@@ -4,7 +4,22 @@
         "name": "Create Branch",
         "tool": "create_branch",
         "description": "Creates a new branch in the selected GitHub repository.",
-        "template": "Create a new branch called {{branch_name}} from {{base_branch}} in {{repo_name}}"
+        "template": "Create a new branch called {{branch_name}} from {{base_branch}} in {{repo_name}}",
+        "palette": true
+      },
+      {
+        "name": "Create a new repository",
+        "tool": "create_repositoty",
+        "description": "Creates a new repository in the GitHub account.",
+        "template": "Create a new repository called {{repo_name}}",
+        "palette": true
+      },
+      {
+        "name": "Create a new issue",
+        "tool": "create_issue",
+        "description": "Creates a new issue in a GitHub repository.",
+        "template": "Create a new issue in the repository {{repo_name}} with owner {{owner_name}} and issue titel as {{desc}}",
+        "palette": true
       }
     ]
   }
