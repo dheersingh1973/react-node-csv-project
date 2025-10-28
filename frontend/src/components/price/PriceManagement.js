@@ -97,6 +97,7 @@ const PriceManagement = () => {
               <th>Brand</th>
               <th>Sale Price</th>
               <th>Market Price</th>
+              <th>Sync Status</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -119,6 +120,15 @@ const PriceManagement = () => {
                   )}
                 </td>
                 <td>${product.market_price}</td>
+                <td>
+                  <span
+                    className={`sync-status-label ${
+                      product.is_sync === 0 ? 'not-synced' : 'synced'
+                    }`}
+                  >
+                    {product.is_sync === 0 ? 'Not Synced' : 'Synced'}
+                  </span>
+                </td>
                 <td className="product-actions">
                   {editingProduct === product.product_id ? (
                     <button className="action-button save-button" onClick={() => handleSaveClick(product)}>Save</button>

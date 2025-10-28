@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
+import moment from 'moment'; // Import moment for date formatting
+// import { FaStar } from 'react-icons/fa'; // Removed FaStar import
 import '../reports/css/OrderDetails.css'; // Import the CSS file
+
+// Removed SyncStatusStar helper component
 
 const OrderDetails = () => {
   const { orderId } = useParams();
@@ -72,6 +76,26 @@ const OrderDetails = () => {
         <div className="detail-item">
           <strong>Item Total Amount:</strong> ${orderDetails.item_total_amount ? parseFloat(orderDetails.item_total_amount).toFixed(2) : '0.00'}
         </div>
+        <div className="detail-item">
+          <strong>Created On:</strong> {orderDetails.order_date ? moment(orderDetails.order_date).format('YYYY-MM-DD HH:mm:ss') : 'N/A'}
+        </div>
+        <div className="detail-item">
+          <strong>Sync Time:</strong> {orderDetails.last_sync_date ? moment(orderDetails.last_sync_date).format('YYYY-MM-DD HH:mm:ss') : 'N/A'}
+        </div>
+        {orderDetails && orderDetails.is_sync !== undefined && (
+        <div className="detail-item">
+          <strong>Sync Status:</strong>
+          <span style={{
+            backgroundColor: orderDetails.is_sync === 0 ? '#ffcccc' : '#ccffcc', // Light red for Not Synced, light green for Synced
+            color: orderDetails.is_sync === 0 ? '#cc0000' : '#009900', // Darker red text, darker green text
+            padding: '5px 10px',
+            borderRadius: '5px',
+            fontWeight: 'bold',
+          }}>
+            {orderDetails.is_sync === 0 ? 'Not Synced' : 'Synced'}
+          </span>
+        </div>
+        )}
       </div>
 
       <h3>Order Items</h3>

@@ -20,7 +20,7 @@ const Pricebook = () => {
           <div className="feature-list">
             <button className="action-button" onClick={() => navigate('/product-catalog')}>💰 Product Catalog</button>
             <button className="action-button" onClick={() => navigate('/price-management')}>💰 Price Management</button>
-            <div className="feature-item">• Discounts and promotions</div>
+            <button className="action-button" onClick={() => navigate('/discount-report')}>📈 Discounts and promotions</button>
             <button className="action-button" onClick={() => navigate('/category-organization')}>⚙️ Category Organization</button>
           </div>
         </div>

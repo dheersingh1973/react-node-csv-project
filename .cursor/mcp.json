@@ -1,0 +1,31 @@
+{
+  "mcpServers": {
+    "github": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "ghcr.io/github/github-mcp-server"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "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"
+      }
+    },
+    "mysql-database": {
+      "command": "node",
+      "args": ["D:/Projects/mcp-mysql/index.js"],
+      "env": {
+        "DB_HOST": "localhost",
+        "DB_PORT": "3307",
+        "DB_USER": "root",
+        "DB_PASSWORD": "Tink@2Mink",
+        "DB_DATABASE": "pos_poc"
+      }
+    }
+  }
+}
+
+

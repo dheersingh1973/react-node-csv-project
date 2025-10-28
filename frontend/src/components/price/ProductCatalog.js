@@ -107,6 +107,7 @@ const ProductCatalog = () => {
               <th>Sale Price</th>
               <th>Market Price</th>
               <th>Quantity</th>
+              <th>Sync Status</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -149,6 +150,7 @@ const ProductCatalog = () => {
                         onChange={handleChange}
                       />
                     </td>
+                    <td></td> {/* Empty cell for Sync Status in edit mode */}
                     <td className="product-actions">
                       <button className="action-button save-button" onClick={() => handleSaveClick(product.product_id)}>Save</button>
                       <button className="action-button cancel-button" onClick={handleCancelClick}>Cancel</button>
@@ -162,6 +164,15 @@ const ProductCatalog = () => {
                     <td>${product.sale_price}</td>
                     <td>${product.market_price}</td>
                     <td>{product.quantity}</td>
+                    <td>
+                      <span
+                        className={`sync-status-label ${
+                          product.is_sync === 0 ? 'not-synced' : 'synced'
+                        }`}
+                      >
+                        {product.is_sync === 0 ? 'Not Synced' : 'Synced'}
+                      </span>
+                    </td>
                     <td className="product-actions">
                       <button className="action-button edit-button" onClick={() => handleEditClick(product)}>Edit</button>
                     </td>
