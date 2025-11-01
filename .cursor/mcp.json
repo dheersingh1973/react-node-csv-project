@@ -14,7 +14,7 @@
         "GITHUB_PERSONAL_ACCESS_TOKEN": "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"
       }
     },
-    "mysql-database": {
+    "mcp_mysql_dheer": {
       "command": "node",
       "args": ["D:/Projects/mcp-mysql/index.js"],
       "env": {

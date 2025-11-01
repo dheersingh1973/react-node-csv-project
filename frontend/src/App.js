@@ -29,18 +29,18 @@ function App() {
       color: '#4CAF50'
     },
     {
-      id: 'store-status',
-      title: 'Store Status',
-      icon: '🏪',
-      path: '/store-status',
-      color: '#2196F3'
-    },
-    {
       id: 'pricebook',
       title: 'Pricebook',
       icon: '💰',
       path: '/pricebook',
       color: '#FF9800'
+    },
+    {
+      id: 'store-status',
+      title: 'Store Status',
+      icon: '🏪',
+      path: '/store-status',
+      color: '#2196F3'
     },
     {
       id: 'vendors',

@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config(); // Load environment variables from .env file
-const { connectDB, getConnections, localConnectionEstablished, globalConnectionEstablished, reconnectGlobalDB, connectGlobalDBFailed } = require('./db');
+const { connectDB, getConnections, localConnectionEstablished, globalConnectionEstablished: isGlobalConnectionEstablished, reconnectGlobalDB, connectGlobalDBFailed } = require('./db');
 const { sendBillByEmail } = require('./utils/email'); // Import the email utility
 const { insertAuditTrail } = require('./utils/audit_utils'); // Import the audit trail utility
 const path = require('path');
@@ -30,9 +30,9 @@ const initializeConnectionsAndSync = async () => {
     await connectDB();
     ({ localConnection, globalConnection } = getConnections());
 
-    if (localConnectionEstablished() && globalConnectionEstablished()) {
+    if (localConnectionEstablished() && isGlobalConnectionEstablished()) {
       console.log("Both databases connected. Initiating syncData.");
-      console.log(`Initial Check: Local: ${localConnectionEstablished()}, Global: ${globalConnectionEstablished()}`);
+      console.log(`Initial Check: Local: ${localConnectionEstablished()}, Global: ${isGlobalConnectionEstablished()}`);
       syncData();
     } else if (localConnectionEstablished()) {
       console.log("Local database connected. Operating in local-only mode. Global database not connected.");
@@ -57,7 +57,7 @@ setInterval(async () => {
     return;
   }
 
-  if (!globalConnectionEstablished()) {
+  if (!isGlobalConnectionEstablished()) {
     console.warn("Global database not connected. Attempting to reconnect...");
     const reconnected = await reconnectGlobalDB();
     if (reconnected) {
@@ -68,9 +68,9 @@ setInterval(async () => {
     }
   }
 
-  if (localConnectionEstablished() && globalConnectionEstablished()) {
+  if (localConnectionEstablished() && isGlobalConnectionEstablished()) {
     console.log("Both databases connected. Triggering periodic syncData.");
-    console.log(`Periodic Check: Local: ${localConnectionEstablished()}, Global: ${globalConnectionEstablished()}`);
+    console.log(`Periodic Check: Local: ${localConnectionEstablished()}, Global: ${isGlobalConnectionEstablished()}`);
     try {
       await syncData();
       console.log("Periodic syncData completed successfully.");
@@ -79,7 +79,7 @@ setInterval(async () => {
     }
   } else {
     console.log("Periodic check: Global database still not connected. Skipping syncData.");
-    console.log(`Periodic Check: Local: ${localConnectionEstablished()}, Global: ${globalConnectionEstablished()}`);
+    console.log(`Periodic Check: Local: ${localConnectionEstablished()}, Global: ${isGlobalConnectionEstablished()}`);
   }
 }, SYNC_INTERVAL);
 
@@ -94,7 +94,7 @@ async function getGlobalUserId(localUserId, localConn) {
 
 // Modular sync function for UserAccounts
 async function syncUserAccounts(localConnection, globalConnection) {
-  if (!globalConnectionEstablished()) {
+  if (!isGlobalConnectionEstablished()) {
     console.warn("Global database not connected. Skipping UserAccounts sync.");
     return;
   }
@@ -175,7 +175,7 @@ async function syncUserAccounts(localConnection, globalConnection) {
 
 // Modular sync function for Grocery_Products
 async function syncGroceryProducts(localConnection, globalConnection) {
-  if (!globalConnectionEstablished()) {
+  if (!isGlobalConnectionEstablished()) {
     console.warn("Global database not connected. Skipping Grocery_Products sync.");
     return;
   }
@@ -257,7 +257,7 @@ async function syncGroceryProducts(localConnection, globalConnection) {
 
 // Modular sync function for Orders
 async function syncOrders(localConnection, globalConnection) {
-  if (!globalConnectionEstablished()) {
+  if (!isGlobalConnectionEstablished()) {
     console.warn("Global database not connected. Skipping Orders sync.");
     return;
   }
@@ -355,7 +355,7 @@ async function syncOrders(localConnection, globalConnection) {
 
 // Modular sync function for Points_Event
 async function syncPointsEvents(localConnection, globalConnection) {
-  if (!globalConnectionEstablished()) {
+  if (!isGlobalConnectionEstablished()) {
     console.warn("Global database not connected. Skipping Points_Event sync.");
     return;
   }
@@ -415,6 +415,15 @@ async function syncPointsEvents(localConnection, globalConnection) {
       const transactionIdPointsEventUpdate = generateTransactionId();
       await insertAuditTrail(transactionIdPointsEventUpdate, 'Points_Event', masterPointsEventId, 'master_balance_after', null, masterBalanceAfter, 'UPDATE', changed_by_user);
 
+      // Update TotalPoints in global UserAccounts table for this user
+      await globalConnection.query(
+        `UPDATE UserAccounts SET TotalPoints = ? WHERE user_id = ?`,
+        [masterBalanceAfter, event.master_user_id]
+      );
+      // Audit trail for UserAccounts update (TotalPoints)
+      const transactionIdUserAccountsUpdate = generateTransactionId();
+      await insertAuditTrail(transactionIdUserAccountsUpdate, 'UserAccounts', event.master_user_id, 'TotalPoints', null, masterBalanceAfter, 'UPDATE', changed_by_user);
+
       // Update local Points_Event to mark as synced and store global_points_event_id
       await localConnection.query(
         `UPDATE pos_poc.Points_Event SET is_sync = 1,last_sync_date=NOW() WHERE id = ?`,
@@ -432,7 +441,7 @@ async function syncPointsEvents(localConnection, globalConnection) {
 // Main syncData function to orchestrate modular syncs
 async function syncData() {
   try {
-    if (!globalConnectionEstablished()) {
+    if (!isGlobalConnectionEstablished()) {
       console.warn("Global database not connected during syncData. Skipping synchronization.");
       throw new Error("Global DB not connected.");
     }
@@ -452,7 +461,6 @@ async function syncData() {
     throw err; // Re-throw the error to be caught by the caller
   }
 }
-
 
 app.post('/api/global-db-failed', async (req, res) => {
   console.log("Frontend reported global DB connection failed.");
@@ -519,7 +527,7 @@ app.post('/api/reconnect-global-db', async (req, res) => {
 app.get('/api/db-status', (req, res) => {
   res.status(200).json({
     localConnected: localConnectionEstablished(),
-    globalConnected: globalConnectionEstablished(),
+    globalConnected: isGlobalConnectionEstablished(),
   });
 });
 
@@ -529,6 +537,8 @@ app.get('/api/products', async (req, res) => {
   const offset = (page - 1) * limit;
   const category = req.query.category;
   const searchTerm = req.query.search;
+  const isSync = req.query.isSync; // New: Get isSync filter from query
+  const brand = req.query.brand; // New: Get brand filter from query
 
   let query = `SELECT product_id, Sku_id, product, category, brand, sale_price, market_price, category_id, quantity, is_sync FROM pos_poc.Grocery_Products`;
   const queryParams = [];
@@ -541,6 +551,14 @@ app.get('/api/products', async (req, res) => {
   if (searchTerm) {
     conditions.push(`(product LIKE ? OR brand LIKE ?)`);
     queryParams.push(`%${searchTerm}%`, `%${searchTerm}%`);
+  }
+  if (isSync !== undefined) {
+    conditions.push(`is_sync = ?`);
+    queryParams.push(isSync);
+  }
+  if (brand && brand !== 'all') {
+    conditions.push(`brand = ?`);
+    queryParams.push(brand);
   }
 
   if (conditions.length > 0) {
@@ -556,6 +574,18 @@ app.get('/api/products', async (req, res) => {
   } catch (err) {
     console.error('Error fetching products:', err);
     res.status(500).json({ error: 'Error fetching products' });
+  }
+});
+
+app.get('/api/brands', async (req, res) => {
+  try {
+    const [brands] = await localConnection.query(
+      `SELECT DISTINCT brand FROM pos_poc.Grocery_Products WHERE brand IS NOT NULL AND brand != '' ORDER BY brand`
+    );
+    res.json(brands.map(row => row.brand));
+  } catch (err) {
+    console.error('Error fetching brands:', err);
+    res.status(500).json({ error: 'Error fetching brands' });
   }
 });
 
@@ -866,6 +896,15 @@ app.post('/api/place-order', async (req, res) => {
           const transactionIdPointsRedeem = generateTransactionId();
           await insertAuditTrail(transactionIdPointsRedeem, 'Points_Event', insertPointsEventRedeemResult.insertId, '*', null, JSON.stringify({ userId, activity_type_id: 5, order_id: orderId, points: -points_redeemed, balance_after: newBalanceAfterRedemption, activity_desc: 'Points redeemed', pos_id: POS_ID, store_id: STORE_ID }), 'INSERT', changed_by_user);
           currentPointsBalance = newBalanceAfterRedemption; // Update balance for next event
+
+          // Update TotalPoints in local UserAccounts table for this user
+          await localConnection.query(
+            `UPDATE pos_poc.UserAccounts SET TotalPoints = ? WHERE user_id = ?`,
+            [newBalanceAfterRedemption, userId]
+          );
+          // Audit trail for UserAccounts update (TotalPoints) in local DB
+          const transactionIdLocalUserAccountsUpdate = generateTransactionId();
+          await insertAuditTrail(transactionIdLocalUserAccountsUpdate, 'UserAccounts', userId, 'TotalPoints', null, newBalanceAfterRedemption, 'UPDATE', changed_by_user);
         }
 
         
@@ -874,13 +913,23 @@ app.post('/api/place-order', async (req, res) => {
         if (pointsEarned > 0) {
           const newBalanceAfterOrder = currentPointsBalance + pointsEarned;
           const [insertPointsEventEarnResult] = await localConnection.query(
-            `INSERT INTO pos_poc.Points_Event (user_id, activity_type_id, order_id, activity_desc, points, balance_after, created_at, pos_id, store_id)
+            `INSERT INTO pos_poc.Points_Event (user_id, activity_type_id, order_id, points, balance_after, activity_desc, created_at, pos_id, store_id)
             VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?)`,
-            [userId, 4, orderId, 'Order created', pointsEarned, newBalanceAfterOrder, POS_ID, STORE_ID]
+            [userId, 4, orderId, pointsEarned, newBalanceAfterOrder, 'Points earned from order', POS_ID, STORE_ID]
           );
-          // Audit trail for Points_Event insert (earned)
+          // Audit trail for Points_Event insert (earning)
           const transactionIdPointsEarn = generateTransactionId();
-          await insertAuditTrail(transactionIdPointsEarn, 'Points_Event', insertPointsEventEarnResult.insertId, '*', null, JSON.stringify({ userId, activity_type_id: 4, order_id: orderId, activity_desc: 'Order created', points: pointsEarned, balance_after: newBalanceAfterOrder, pos_id: POS_ID, store_id: STORE_ID }), 'INSERT', changed_by_user);
+          await insertAuditTrail(transactionIdPointsEarn, 'Points_Event', insertPointsEventEarnResult.insertId, '*', null, JSON.stringify({ userId, activity_type_id: 4, order_id: orderId, points: pointsEarned, balance_after: newBalanceAfterOrder, activity_desc: 'Points earned from order', pos_id: POS_ID, store_id: STORE_ID }), 'INSERT', changed_by_user);
+          currentPointsBalance = newBalanceAfterOrder; // Update balance for next event
+ 
+          // Update TotalPoints in local UserAccounts table for this user
+          await localConnection.query(
+            `UPDATE pos_poc.UserAccounts SET TotalPoints = ? WHERE user_id = ?`,
+            [newBalanceAfterOrder, userId]
+          );
+          // Audit trail for UserAccounts update (TotalPoints) in local DB
+          const transactionIdLocalUserAccountsUpdate = generateTransactionId();
+          await insertAuditTrail(transactionIdLocalUserAccountsUpdate, 'UserAccounts', userId, 'TotalPoints', null, newBalanceAfterOrder, 'UPDATE', changed_by_user);
         }
 
         // Increment total_redeems for the used discount code
@@ -1018,22 +1067,25 @@ app.get('/api/points/balance', async (req, res) => {
   try {
     let currentPointsBalance = 0;
 
-    if (globalConnectionEstablished()) {
+    if (isGlobalConnectionEstablished()) {
       // Attempt to fetch from global database first
-      const [userAccountRows] = await localConnection.query(
-        `SELECT user_id, master_user_id FROM pos_poc.UserAccounts WHERE mobile_number = ?`,
-        [mobile_number]
-      );
-
-      if (userAccountRows.length > 0 && userAccountRows[0].master_user_id) {
-        const globalUserId = userAccountRows[0].master_user_id;
-        const [globalPointsRows] = await globalConnection.query(
-          `SELECT master_balance_after FROM Points_Event WHERE user_id = ? ORDER BY id DESC,created_at DESC LIMIT 1`,
-          [globalUserId]
+      const globalDb = getConnections().globalConnection;
+      if (globalDb) {
+        const [userAccountRows] = await globalDb.query(
+          `SELECT user_id FROM UserAccounts WHERE mobile_number = ?`,
+          [mobile_number]
         );
-        if (globalPointsRows.length > 0) {
-          currentPointsBalance = globalPointsRows[0].master_balance_after;
-          return res.status(200).json({ balance_after: currentPointsBalance });
+
+        if (userAccountRows.length > 0 && userAccountRows[0].user_id) {
+          const globalUserId = userAccountRows[0].user_id;
+          const [globalPointsRows] = await globalDb.query(
+            `SELECT master_balance_after FROM Points_Event WHERE master_user_id = ? ORDER BY id DESC,created_at DESC LIMIT 1`,
+            [globalUserId]
+          );
+          if (globalPointsRows.length > 0) {
+            currentPointsBalance = globalPointsRows[0].master_balance_after;
+            return res.status(200).json({ balance_after: currentPointsBalance });
+          }
         }
       }
     }

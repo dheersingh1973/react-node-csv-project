@@ -55,7 +55,7 @@ const ThankYou = () => {
     <div className="thank-you-container">
       <h2>Thank You for Your Order!</h2>
       <p>Your Order ID: <strong>{orderId}</strong></p>
-      <p>Total Amount: <strong>₹ {cartGrandTotal.toFixed(2)}</strong></p>
+      <p>Total Amount: <strong>$ {cartGrandTotal.toFixed(2)}</strong></p>
 
       <div className="thank-you-actions">
         <button className="action-button" onClick={handleNewOrder}>New Order</button>
@@ -63,6 +63,7 @@ const ThankYou = () => {
         <button className="action-button" onClick={handleSendBillByEmail}>Bill Send to Email</button>
       </div>
       <button className="action-button open-cash-register-button">Open Cash Register</button>
+      <button className="action-button order-report-button" onClick={() => navigate('/order-report')}>Order report</button>
     </div>
   );
 };

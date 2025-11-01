@@ -67,3 +67,13 @@
 .open-cash-register-button:hover {
   background-color: #218838;
 }
+
+.order-report-button {
+  width: 100%; /* Make it a long button */
+  margin-top: 20px; /* Space it from other buttons */
+  background-color: #17a2b8; /* A new color for distinction, e.g., info blue */
+}
+
+.order-report-button:hover {
+  background-color: #138496;
+}

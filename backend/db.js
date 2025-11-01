@@ -108,7 +108,7 @@ const reconnectGlobalDB = async () => {
       return false; // Indicate failure
     }
   }
-  return globalConnectionEstablished(); // If already connected or in progress, return current status
+  return globalConnectionEstablished; // If already connected or in progress, return current status
 };
 
 const connectDB = async () => {

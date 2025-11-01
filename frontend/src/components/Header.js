@@ -115,7 +115,7 @@ const Header = ({ menuItems }) => {
       <div className="right-section"> 
         </div>
         <div className={`connectivity-indicator ${isConnected ? 'connected' : 'disconnected'}`}>
-          {isConnected ? 'Internet Connected' : 'Internet Disconnected'}
+          {isConnected ? 'Online' : 'Offline'}
         </div>
         <div className={`connectivity-indicator ${isGlobalDbConnected ? 'connected' : 'disconnected'}`}>
           {isGlobalDbConnected ? 'Global DB Connected' : 'Global DB Disconnected'}
