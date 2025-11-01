@@ -45,6 +45,8 @@ const OrderPayment = () => {
 
       if (response.status === 201) {
         alert('Order placed successfully!');
+        sessionStorage.removeItem('mobileNumber'); // Clear mobile number from session storage
+        sessionStorage.removeItem('isPointsApplied'); // Clear points applied flag
         navigate('/thank-you', { 
             state: { 
                 orderId: response.data.orderId, 
@@ -73,14 +75,14 @@ const OrderPayment = () => {
     <div className="order-payment-container">
       <div className="order-payment-header">
         <h1>Grand Total</h1>
-        <p className="grand-total-amount">₹ {cartGrandTotal.toFixed(2)}</p>
+        <p className="grand-total-amount">$ {cartGrandTotal.toFixed(2)}</p>
       </div>
 
       <div className="order-summary-details">
-        <p>SUB TOTAL: <span>₹ {cartGrandTotal.toFixed(2)}</span></p>
-        <p>DELIVERY CHARGE: <span>₹ 0.00</span></p>
-        <p>DISCOUNT: <span>₹ 0.00</span></p>
-        <p>CHANGE DUE: <span>₹ {amountReturned > 0 ? amountReturned.toFixed(2) : '0.00'}</span></p>
+        <p>SUB TOTAL: <span>$ {cartGrandTotal.toFixed(2)}</span></p>
+        <p>DELIVERY CHARGE: <span>$ 0.00</span></p>
+        <p>DISCOUNT: <span>$ 0.00</span></p>
+        <p>CHANGE DUE: <span>$ {amountReturned > 0 ? amountReturned.toFixed(2) : '0.00'}</span></p>
       </div>
 
       <div className="options-grid">
@@ -135,7 +137,7 @@ const OrderPayment = () => {
               />
               <button onClick={calculateChange}>Calculate Change</button>
               {amountReturned > 0 && (
-                <p>Amount to be Returned: ₹ {amountReturned.toFixed(2)}</p>
+                <p>Amount to be Returned: $ {amountReturned.toFixed(2)}</p>
               )}
             </div>
           )}

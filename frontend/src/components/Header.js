@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './css/Header.css';
+import { STORE_NAME, POS_NAME } from '../utils/config';
 
 const Header = ({ menuItems }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -97,6 +98,8 @@ const Header = ({ menuItems }) => {
           ☰
         </button>
         <span className="app-name">Demo POS App</span>
+        <span className="store-name">{STORE_NAME}</span>
+        <span className="pos-name">{POS_NAME}</span>
       </div>
       <nav className={`nav-menu ${isMenuOpen ? 'open' : ''}`}>
         <ul>
@@ -109,17 +112,17 @@ const Header = ({ menuItems }) => {
           ))}
         </ul>
       </nav>
-      <div className="right-section">
-        <span className="user-name">Hi Dheer Singh</span>
-        <div className="user-icon">
-          👤
+      <div className="right-section"> 
         </div>
         <div className={`connectivity-indicator ${isConnected ? 'connected' : 'disconnected'}`}>
-          {isConnected ? 'Internet Connected' : 'Internet Disconnected'}
+          {isConnected ? 'Online' : 'Offline'}
         </div>
         <div className={`connectivity-indicator ${isGlobalDbConnected ? 'connected' : 'disconnected'}`}>
           {isGlobalDbConnected ? 'Global DB Connected' : 'Global DB Disconnected'}
         </div>
+        <span className="user-name">Hi Dheer Singh</span>
+        <div className="user-icon">
+          👤
       </div>
     </header>
   );

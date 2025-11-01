@@ -8,10 +8,16 @@
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
-.left-section,
+.left-section {
+  display: flex;
+  align-items: center;
+}
+
 .right-section {
   display: flex;
   align-items: center;
+  margin-left: auto; /* Pushes the right section to the right */
+  gap: 15px; /* Adds space between items in the right section */
 }
 
 .hamburger-menu {
@@ -71,6 +77,26 @@
 .app-name {
   font-size: 1.3em;
   font-weight: bold;
+  margin-right: 15px;
+}
+
+.store-name,
+.pos-name {
+  font-size: 0.8em;
+  padding: 3px 8px;
+  border-radius: 5px;
+  margin-right: 10px;
+  font-weight: bold;
+}
+
+.store-name {
+  background-color: #007bff; /* Blue */
+  color: white;
+}
+
+.pos-name {
+  background-color: #28a745; /* Green */
+  color: white;
 }
 
 .user-name {

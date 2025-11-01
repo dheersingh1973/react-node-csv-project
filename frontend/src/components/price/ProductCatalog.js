@@ -10,6 +10,9 @@ const ProductCatalog = () => {
   const [editingProduct, setEditingProduct] = useState(null); // State to track which product is being edited
   const [editedProductData, setEditedProductData] = useState({}); // State to hold edited product data
   const location = useLocation(); // Initialize useLocation
+  const [syncStatusFilter, setSyncStatusFilter] = useState('all'); // 'all', 'synced', 'not-synced'
+  const [brandFilter, setBrandFilter] = useState('all'); // New: 'all' or specific brand
+  const [brands, setBrands] = useState([]); // New: State to store unique brands
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -21,6 +24,12 @@ const ProductCatalog = () => {
       let url = `http://localhost:5000/api/products?page=${page}&limit=30`;
       if (category) {
         url += `&category=${category}`;
+      }
+      if (syncStatusFilter !== 'all') {
+        url += `&isSync=${syncStatusFilter === 'synced' ? 1 : 0}`;
+      }
+      if (brandFilter !== 'all') {
+        url += `&brand=${brandFilter}`;
       }
 
       const response = await fetch(url);
@@ -34,11 +43,28 @@ const ProductCatalog = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, location.search, setLoading, setError, setProducts]);
+  }, [page, location.search, syncStatusFilter, brandFilter]);
 
   useEffect(() => {
     fetchProducts();
-  }, [page, location.search, fetchProducts]); // Re-fetch when page or URL search params change
+  }, [page, location.search, fetchProducts, syncStatusFilter, brandFilter]); // Re-fetch when page or URL search params change
+
+  // New useEffect to fetch unique brands when the component mounts
+  useEffect(() => {
+    const fetchBrands = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/brands');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setBrands(data);
+      } catch (error) {
+        console.error("Error fetching brands:", error);
+      }
+    };
+    fetchBrands();
+  }, []);
 
   const handleNextPage = () => {
     setPage((prevPage) => prevPage + 1);
@@ -97,6 +123,34 @@ const ProductCatalog = () => {
   return (
     <div className="product-catalog-container">
       <h2>Product Catalog</h2>
+      <div className="filter-controls">
+        <label htmlFor="syncStatusFilter">Sync Status: </label>
+        <select
+          id="syncStatusFilter"
+          value={syncStatusFilter}
+          onChange={(e) => setSyncStatusFilter(e.target.value)}
+          className="dropdown-filter"
+        >
+          <option value="all">All</option>
+          <option value="synced">Synced</option>
+          <option value="not-synced">Not Synced</option>
+        </select>
+
+        <label htmlFor="brandFilter">Brand: </label>
+        <select
+          id="brandFilter"
+          value={brandFilter}
+          onChange={(e) => setBrandFilter(e.target.value)}
+          className="dropdown-filter"
+        >
+          <option value="all">All Brands</option>
+          {brands.map((brandName) => (
+            <option key={brandName} value={brandName}>
+              {brandName}
+            </option>
+          ))}
+        </select>
+      </div>
       <div className="product-table-container">
         <table className="product-table">
           <thead>
@@ -107,6 +161,7 @@ const ProductCatalog = () => {
               <th>Sale Price</th>
               <th>Market Price</th>
               <th>Quantity</th>
+              <th>Sync Status</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -149,6 +204,7 @@ const ProductCatalog = () => {
                         onChange={handleChange}
                       />
                     </td>
+                    <td></td> {/* Empty cell for Sync Status in edit mode */}
                     <td className="product-actions">
                       <button className="action-button save-button" onClick={() => handleSaveClick(product.product_id)}>Save</button>
                       <button className="action-button cancel-button" onClick={handleCancelClick}>Cancel</button>
@@ -162,6 +218,15 @@ const ProductCatalog = () => {
                     <td>${product.sale_price}</td>
                     <td>${product.market_price}</td>
                     <td>{product.quantity}</td>
+                    <td>
+                      <span
+                        className={`sync-status-label ${
+                          product.is_sync === 0 ? 'not-synced' : 'synced'
+                        }`}
+                      >
+                        {product.is_sync === 0 ? 'Not Synced' : 'Synced'}
+                      </span>
+                    </td>
                     <td className="product-actions">
                       <button className="action-button edit-button" onClick={() => handleEditClick(product)}>Edit</button>
                     </td>

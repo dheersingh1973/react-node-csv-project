@@ -64,3 +64,21 @@
 .receipt-button:hover {
   background-color: #218838;
 }
+
+.sync-status-label {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 15px;
+  color: white;
+  font-weight: bold;
+  font-size: 0.8em;
+  text-align: center;
+}
+
+.sync-status-label.not-synced {
+  background-color: #dc3545; /* Red */
+}
+
+.sync-status-label.synced {
+  background-color: #28a745; /* Green */
+}

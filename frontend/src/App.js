@@ -16,6 +16,7 @@ import OrderPayment from './components/pos/OrderPayment'; // Import OrderPayment
 import ThankYou from './components/pos/ThankYou'; // Import ThankYou component
 import OrderReport from './components/reports/OrderReport'; // Import OrderReport component
 import OrderDetails from './components/reports/OrderDetails'; // Import OrderDetails component
+import DiscountReport from './components/reports/DiscountReport'; // Import DiscountReport component
 import './App.css';
 
 function App() {
@@ -28,18 +29,18 @@ function App() {
       color: '#4CAF50'
     },
     {
-      id: 'store-status',
-      title: 'Store Status',
-      icon: '🏪',
-      path: '/store-status',
-      color: '#2196F3'
-    },
-    {
       id: 'pricebook',
       title: 'Pricebook',
       icon: '💰',
       path: '/pricebook',
       color: '#FF9800'
+    },
+    {
+      id: 'store-status',
+      title: 'Store Status',
+      icon: '🏪',
+      path: '/store-status',
+      color: '#2196F3'
     },
     {
       id: 'vendors',
@@ -84,6 +85,7 @@ function App() {
           <Route path="/product-catalog" element={<ProductCatalog />} /> {/* Add new route */}
           <Route path="/price-management" element={<PriceManagement />} /> {/* Add new route */}
           <Route path="/category-organization" element={<CategoryOrganization />} /> {/* Add new route */}
+          <Route path="/discount-report" element={<DiscountReport />} /> {/* Add new route for DiscountReport */}
         </Routes>
       </div>
     </Router>

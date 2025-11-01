@@ -25,7 +25,8 @@ const POSCart = () => {
   useEffect(() => {
     fetchCategories();
     const storedMobileNumber = sessionStorage.getItem('mobileNumber');
-    if (storedMobileNumber) {
+    const storedIsPointsApplied = sessionStorage.getItem('isPointsApplied');
+    if (storedMobileNumber && storedIsPointsApplied === 'true') {
       setMobileNumber(storedMobileNumber);
     }
   }, []);
@@ -169,7 +170,13 @@ const POSCart = () => {
     }
 
     try {
-      sessionStorage.setItem('mobileNumber', mobileNumber); // Store mobile number in session storage
+      if (pointsRedeemed > 0 || pointsAmountDiscount > 0) {
+        sessionStorage.setItem('mobileNumber', mobileNumber); // Store mobile number in session storage if points are applied
+        sessionStorage.setItem('isPointsApplied', 'true'); // Store flag if points are applied
+      } else {
+        sessionStorage.removeItem('mobileNumber');
+        sessionStorage.removeItem('isPointsApplied');
+      }
       const response = await axios.post('http://localhost:5000/api/checkout', {
         mobile_number: mobileNumber,
         cart_items: cart.map(item => ({ product_id: item.product_id, quantity: item.quantity })),

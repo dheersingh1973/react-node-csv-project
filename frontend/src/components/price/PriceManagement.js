@@ -10,13 +10,23 @@ const PriceManagement = () => {
   const [newSalePrice, setNewSalePrice] = useState({}); // State to hold new sale prices
   const [showPopup, setShowPopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState('');
+  const [syncStatusFilter, setSyncStatusFilter] = useState('all'); // 'all', 'synced', 'not-synced'
+  const [brandFilter, setBrandFilter] = useState('all'); // New: 'all' or specific brand
+  const [brands, setBrands] = useState([]); // New: State to store unique brands
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       // Changed limit to 5 for this interface
-      const response = await fetch(`http://localhost:5000/api/products?page=${page}&limit=5`);
+      let url = `http://localhost:5000/api/products?page=${page}&limit=5`;
+      if (syncStatusFilter !== 'all') {
+        url += `&isSync=${syncStatusFilter === 'synced' ? 1 : 0}`;
+      }
+      if (brandFilter !== 'all') {
+        url += `&brand=${brandFilter}`;
+      }
+      const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -27,11 +37,29 @@ const PriceManagement = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, setLoading, setError, setProducts]);
+  }, [page, syncStatusFilter, brandFilter]);
 
   useEffect(() => {
+    setProducts([]); // Clear products when filter changes to show loading
     fetchProducts();
-  }, [page, fetchProducts]);
+  }, [page, fetchProducts, syncStatusFilter, brandFilter]);
+
+  // New useEffect to fetch unique brands when the component mounts
+  useEffect(() => {
+    const fetchBrands = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/brands');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setBrands(data);
+      } catch (error) {
+        console.error("Error fetching brands:", error);
+      }
+    };
+    fetchBrands();
+  }, []);
 
   const handleEditClick = (product) => {
     setEditingProduct(product.product_id);
@@ -88,6 +116,33 @@ const PriceManagement = () => {
   return (
     <div className="price-management-container">
       <h2>Price Management</h2>
+      <div className="filter-controls">
+        <label htmlFor="syncStatusFilter">Sync Status: </label>
+        <select
+          id="syncStatusFilter"
+          value={syncStatusFilter}
+          onChange={(e) => setSyncStatusFilter(e.target.value)}
+          className="dropdown-filter"
+        >
+          <option value="all">All</option>
+          <option value="synced">Synced</option>
+          <option value="not-synced">Not Synced</option>
+        </select>
+        <label htmlFor="brandFilter">Brand: </label>
+        <select
+          id="brandFilter"
+          value={brandFilter}
+          onChange={(e) => setBrandFilter(e.target.value)}
+          className="dropdown-filter"
+        >
+          <option value="all">All Brands</option>
+          {brands.map((brandName) => (
+            <option key={brandName} value={brandName}>
+              {brandName}
+            </option>
+          ))}
+        </select>
+      </div>
       <div className="product-table-container">
         <table className="product-table">
           <thead>
@@ -97,6 +152,7 @@ const PriceManagement = () => {
               <th>Brand</th>
               <th>Sale Price</th>
               <th>Market Price</th>
+              <th>Sync Status</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -119,6 +175,15 @@ const PriceManagement = () => {
                   )}
                 </td>
                 <td>${product.market_price}</td>
+                <td>
+                  <span
+                    className={`sync-status-label ${
+                      product.is_sync === 0 ? 'not-synced' : 'synced'
+                    }`}
+                  >
+                    {product.is_sync === 0 ? 'Not Synced' : 'Synced'}
+                  </span>
+                </td>
                 <td className="product-actions">
                   {editingProduct === product.product_id ? (
                     <button className="action-button save-button" onClick={() => handleSaveClick(product)}>Save</button>

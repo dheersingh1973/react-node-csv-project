@@ -1,37 +1,49 @@
-# Troubleshooting `syncData` Function
+# React Node CSV Project
+Test branch feature
 
-If the `syncData` function in your backend (`backend/index.js`) is running at a regular frequency even when the frontend is not active, it's likely being triggered by an external process. This project does not contain any internal timers (like `setInterval` or `setTimeout`) that would cause `syncData` to run repeatedly.
+This is a full-stack application that demonstrates a React frontend interacting with a Node.js backend to handle CSV data. 
 
-Here are the most probable causes and troubleshooting steps:
+## Project Structure
 
-## Possible Causes
+- `frontend/`: Contains the React application. See [frontend/README.md](frontend/README.md) for more details.
+- `backend/`: Contains the Node.js Express server. See [backend/README.md](backend/README.md) for more details.
 
-1.  **External Scheduler/Cron Job:** A scheduled task (e.g., a cron job on Linux/macOS, Task Scheduler on Windows) or a cloud-based scheduler (e.g., AWS CloudWatch Events, Google Cloud Scheduler) is configured to send requests to your backend's `/api/sync-data` endpoint.
-2.  **Health Check or Monitoring Service:** A monitoring tool or a load balancer's health check might be configured to ping your `/api/sync-data` endpoint regularly.
-3.  **Another Service/Microservice:** If your backend is part of a larger system, another service might be periodically calling the `/api/sync-data` endpoint.
-4.  **Development Tooling:** In a development environment, certain IDE extensions or development proxies might be inadvertently sending requests.
+## Getting Started
 
-## Troubleshooting Steps
+To set up and run the project locally, follow these steps:
 
-1.  **Check Server Logs:** Examine your server logs for incoming requests to the `/api/sync-data` endpoint. Look for the source IP address and user-agent of these requests to identify the caller.
+### Prerequisites
 
-    *   **If deployed:** Check the logs of your hosting provider (e.g., AWS CloudWatch, Google Cloud Logging, Heroku Logs) or your web server (Nginx, Apache).
-    *   **If local:** Check the console output of your Node.js application. You can add more logging within the `/api/sync-data` endpoint to see when it's being hit:
+- Node.js (version 14 or higher)
+- npm or yarn
 
-        ```javascript
-        app.post('/api/sync-data', async (req, res) => {
-          console.log('Received request to /api/sync-data');
-          // ... existing code ...
-        });
-        ```
+### Installation
 
-2.  **Review Deployment Configuration:**
-    *   **Cron Jobs (Linux/macOS):** Check `crontab -e` for the user running the backend application, or look for cron files in `/etc/cron.*` directories.
-    *   **Task Scheduler (Windows):** Open Task Scheduler and look for tasks that might be triggering a `curl` or `wget` command against your backend URL.
-    *   **Cloud Providers:** Review scheduled tasks, event rules, or health check configurations in your cloud provider's console.
+1.  **Clone the repository:**
 
-3.  **Inspect Network Traffic (Local Development):** Use a network monitoring tool (like Wireshark or your browser's developer tools if the request is originating from a web page) to see network requests being made to your backend.
+    ```bash
+    git clone <repository-url>
+    cd react-node-csv-project
+    ```
 
-4.  **Search for Usage of `/api/sync-data`:** If you have access to other parts of the system (e.g., other microservices, frontend code that's not currently running but might have been configured), search for where `/api/sync-data` is being called.
+2.  **Backend Setup:**
 
-By following these steps, you should be able to identify the source of the repeated calls to your `syncData` function.
+    Navigate to the `backend` directory and follow its setup instructions.
+
+    ```bash
+    cd backend
+    npm install
+    npm start
+    ```
+
+3.  **Frontend Setup:**
+
+    Open a new terminal, navigate to the `frontend` directory, and follow its setup instructions.
+
+    ```bash
+    cd frontend
+    npm install
+    npm start
+    ```
+
+After both the backend and frontend servers are running, you can access the application in your browser at `http://localhost:3000` (or whatever port the frontend is configured to use).
