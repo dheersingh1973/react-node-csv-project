@@ -14,18 +14,36 @@
         "GITHUB_PERSONAL_ACCESS_TOKEN": "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"
       }
     },
-    "mcp_mysql_dheer": {
-      "command": "node",
-      "args": ["D:/Projects/mcp-mysql/index.js"],
-      "env": {
-        "DB_HOST": "localhost",
-        "DB_PORT": "3307",
-        "DB_USER": "root",
-        "DB_PASSWORD": "Tink@2Mink",
-        "DB_DATABASE": "pos_poc"
-      }
-    }
+    "mcp_mysql": { 
+      "command": "docker", 
+      "args": [
+        "run", 
+        "-i", 
+        "--rm", 
+        "--network", "bridge", 
+        "-e", "DB_HOST=172.17.0.3",
+        "-e", "DB_USER=root", 
+        "-e", "DB_PASSWORD=Tink@2Mink", 
+        "-e", "DB_DATABASE=pos_poc", 
+        "-e", "DB_PORT=3306", 
+        "dheers/mcp_mysql_dheer", 
+        "node", 
+        "index.js" ] 
+      },
+      "mcp_mysql_global": { 
+        "command": "docker", 
+        "args": [
+          "run", 
+          "-i", 
+          "--rm", 
+          "-e", "DB_HOST=demo-poc.c1a2si8mm232.ap-south-1.rds.amazonaws.com",
+          "-e", "DB_USER=admin", 
+          "-e", "DB_PASSWORD=Tink&7Mink", 
+          "-e", "DB_DATABASE=pos_poc_master", 
+          "-e", "DB_PORT=3308", 
+          "dheers/mcp_mysql_dheer", 
+          "node", 
+          "index.js" ] 
+        }
   }
 }
-
-
