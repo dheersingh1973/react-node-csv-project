@@ -250,7 +250,10 @@ const POSCart = () => {
             <div key={index} className="product-item" onClick={() => addToCart(product)}>
               <h3>{product.product}</h3>
               <p>{product.brand}</p>
-              <p>${product.sale_price}</p>
+             <p>Sale Price : ${product.sale_price}</p>
+              {product.sale_price !== product.market_price && (
+                <p>Market Price: ${product.market_price}</p>
+              )}
               <p>Available: {product.quantity || 'N/A'}</p>
             </div>
           ))}
@@ -267,7 +270,10 @@ const POSCart = () => {
                 <div>
                   <h3>{item.product}</h3>
                   <p>{item.brand}</p>
-                  <p>${item.sale_price} x {item.quantity}</p>
+                  <p>Sale Price : ${item.sale_price} x {item.quantity}</p>
+                  {item.sale_price !== item.market_price && (
+                    <p>Market Price: ${item.market_price}</p>
+                  )}
                 </div>
                 <div className="quantity-controls">
                   <button onClick={() => updateCartQuantity(item.product, item.quantity - 1)}>-</button>

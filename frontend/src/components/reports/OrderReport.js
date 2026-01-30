@@ -57,6 +57,7 @@ const OrderReport = () => {
               <th>Customer Phone No.</th>
               <th>Items Count</th>
               <th>Payment Mode</th>
+              <th>Paid Status</th>
               <th>Sync Status</th>
               <th>Actions</th>
             </tr>
@@ -69,6 +70,7 @@ const OrderReport = () => {
                 <td>{order.customer_phone_no}</td>
                 <td>{order.items_count}</td>
                 <td>{order.payment_method}</td>
+                <td>{order.order_status}</td>
                 <td>
                   <span
                     className={`sync-status-label ${
