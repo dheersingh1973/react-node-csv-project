@@ -1,12 +1,11 @@
 -- =============================================================================
 -- Global Database Schema (MySQL)
--- Generated from backend operations in index.js (sync and API usage).
--- Use DB_NAME_GLOBAL from .env when creating/using the database.
+-- Default database: pos_poc_master
+-- Used by Docker init and for manual setup.
 -- =============================================================================
 
--- Create database (run with sufficient privileges; adjust name if needed)
--- CREATE DATABASE IF NOT EXISTS your_global_db_name CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
--- USE your_global_db_name;
+CREATE DATABASE IF NOT EXISTS pos_poc_master CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE pos_poc_master;
 
 -- -----------------------------------------------------------------------------
 -- 1. UserAccounts (central users; synced from local stores)

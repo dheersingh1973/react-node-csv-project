@@ -30,11 +30,11 @@ const createLocalConnection = () => {
 
 const createGlobalConnection = () => {
   globalConnection = mysql2.createConnection({
-    host: process.env.DB_HOST_GLOBAL, // Fallback to localhost if not set
-    port: process.env.DB_PORT_GLOBAL,
-    user: process.env.DB_USER_GLOBAL,
+    host: process.env.DB_HOST_GLOBAL || 'localhost',
+    port: process.env.DB_PORT_GLOBAL || 3308, // Port 3308 to avoid conflict with local DB on 3307
+    user: process.env.DB_USER_GLOBAL || 'admin',
     password: process.env.DB_PASSWORD_GLOBAL,
-    database: process.env.DB_NAME_GLOBAL
+    database: process.env.DB_NAME_GLOBAL || 'pos_poc_master'
   });
 
   globalConnection.on('error', (err) => {
