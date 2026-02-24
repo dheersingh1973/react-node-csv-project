@@ -137,7 +137,7 @@ async function syncUserAccounts(localConnection, globalConnection) {
         const [result] = await globalConnection.execute(
           `INSERT INTO UserAccounts
           (mobile_number, email, name, address, created_at, TotalPoints, local_user_id, last_sync_date, is_sync, store_id)
-          VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)`,
+          VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, 1, ?)`,
           [
             user.mobile_number,
             user.email,
@@ -145,9 +145,8 @@ async function syncUserAccounts(localConnection, globalConnection) {
             user.address,
             user.created_at,
             user.TotalPoints,
-            user.store_id,
             user.user_id,
-            1
+            user.store_id
           ]
         );
         masterUserId = result.insertId;
