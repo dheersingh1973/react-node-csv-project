@@ -137,7 +137,7 @@ async function syncUserAccounts(localConnection, globalConnection) {
         const [result] = await globalConnection.execute(
           `INSERT INTO UserAccounts
           (mobile_number, email, name, address, created_at, TotalPoints, local_user_id, last_sync_date, is_sync, store_id)
-          VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)`,
+          VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, 1, ?)`,
           [
             user.mobile_number,
             user.email,
@@ -145,9 +145,8 @@ async function syncUserAccounts(localConnection, globalConnection) {
             user.address,
             user.created_at,
             user.TotalPoints,
-            user.store_id,
             user.user_id,
-            1
+            user.store_id
           ]
         );
         masterUserId = result.insertId;
@@ -973,7 +972,9 @@ app.get('/api/orders-report', async (req, res) => {
         ua.mobile_number AS customer_phone_no,
         SUM(oi.quantity) AS items_count,
         o.payment_method,
-        o.is_sync
+        o.is_sync,
+        o.order_status
+
       FROM 
         pos_poc.Orders o
       JOIN 
@@ -981,7 +982,7 @@ app.get('/api/orders-report', async (req, res) => {
       JOIN 
         pos_poc.OrderItems oi ON o.order_id = oi.order_id
       GROUP BY
-        o.order_id, o.total_amount, ua.mobile_number, o.payment_method, o.is_sync
+        o.order_id, o.total_amount, ua.mobile_number, o.payment_method, o.is_sync, o.order_status
       ORDER BY
         o.order_date DESC
     `;

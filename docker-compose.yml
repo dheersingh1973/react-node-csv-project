@@ -1,0 +1,29 @@
+# Global MySQL database (pos_poc_master) for central POS sync
+# Run: docker compose up -d
+# Connection: host=localhost, port=3308, database=pos_poc_master, user=admin
+# Note: Port 3308 chosen to avoid conflict with local DB on 3307
+
+services:
+  mysql-global:
+    image: mysql:8.0
+    container_name: pos-global-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: pos_poc_master
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: "Tink&7Mink"
+      MYSQL_ROOT_PASSWORD: "Tink&7Mink"
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql-global-data:/var/lib/mysql
+      - ./backend/global-database-schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p\"$$MYSQL_ROOT_PASSWORD\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  mysql-global-data:

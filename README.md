@@ -16,6 +16,24 @@ To set up and run the project locally, follow these steps:
 
 - Node.js (version 14 or higher)
 - npm or yarn
+- Docker & Docker Compose (optional, for global MySQL)
+
+### Global MySQL database (Docker)
+
+The app syncs with a central **global** MySQL database. You can run it in Docker:
+
+```bash
+# From project root
+docker compose up -d
+```
+
+- **Database:** `pos_poc_master`
+- **User:** `admin`
+- **Password:** `Tink&7Mink`
+- **Port:** `3308` (host) → 3306 (container)
+  - *Note: Port 3308 chosen to avoid conflict with local DB on 3307*
+
+Schema and tables are created automatically on first run. Copy `backend/.env.example` to `backend/.env` and set `DB_PASSWORD_GLOBAL=Tink&7Mink` (and your local DB settings). Defaults in the app already point to `localhost:3308`, `pos_poc_master`, user `admin`.
 
 ### Installation
 
@@ -26,17 +44,21 @@ To set up and run the project locally, follow these steps:
     cd react-node-csv-project
     ```
 
-2.  **Backend Setup:**
+2.  **Global DB (optional):** Start the global MySQL container (see above).
 
-    Navigate to the `backend` directory and follow its setup instructions.
+3.  **Backend Setup:**
+
+    Copy env and install:
 
     ```bash
     cd backend
+    cp .env.example .env
+    # Edit .env: set local DB credentials and DB_PASSWORD_GLOBAL if using Docker global DB
     npm install
     npm start
     ```
 
-3.  **Frontend Setup:**
+4.  **Frontend Setup:**
 
     Open a new terminal, navigate to the `frontend` directory, and follow its setup instructions.
 
