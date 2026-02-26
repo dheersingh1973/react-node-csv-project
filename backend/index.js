@@ -188,7 +188,7 @@ async function syncGroceryProducts(localConnection, globalConnection) {
 
     for (const product of products) {
       const [existingGlobalProduct] = await globalConnection.execute(
-        `SELECT master_product_id FROM Grocery_Products WHERE sku_id = ? AND store_id = ?`,
+        `SELECT product_id AS master_product_id FROM Grocery_Products WHERE sku_id = ? AND store_id = ?`,
         [product.sku_id, product.store_id]
       );
 

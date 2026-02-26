@@ -36,7 +36,7 @@ const CategoryOrganization = () => {
   return (
     <div className="category-organization-container">
       <h2>Category Organization</h2>
-      <div className="category-list">
+      <div className="category-grid">
         {categories.map((category, index) => (
           <button 
             key={index} 
