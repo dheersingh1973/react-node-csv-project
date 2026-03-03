@@ -44,7 +44,7 @@
 }
 
 .edit-button {
-  background-color: #28a745;
+  background-color: #d2b48c; /* light brown */
   color: white;
   border: none;
   padding: 8px 12px;
@@ -55,7 +55,7 @@
 }
 
 .edit-button:hover {
-  background-color: #218838;
+  background-color: #c49e7e;
 }
 
 /* Basic form styling for the edit modal/inline form */

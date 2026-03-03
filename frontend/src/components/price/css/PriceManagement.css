@@ -59,12 +59,12 @@ h2 {
 }
 
 .edit-button {
-  background-color: #007bff;
+  background-color: #d2b48c; /* light brown */
   color: white;
 }
 
 .edit-button:hover {
-  background-color: #0056b3;
+  background-color: #c49e7e; /* slightly darker brown */
 }
 
 .save-button {
